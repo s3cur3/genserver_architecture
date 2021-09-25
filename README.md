@@ -1,2 +1,3 @@
-# genserver_architecture_talk
-Companion code to my ElixirConf 2021 talk
+# Architecting GenServers for Testability
+
+Companion code to my [ElixirConf 2021](https://2021.elixirconf.com) talk.

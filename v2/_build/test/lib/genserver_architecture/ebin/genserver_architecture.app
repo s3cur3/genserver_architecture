@@ -1,0 +1,9 @@
+{application,genserver_architecture,
+             [{applications,[kernel,stdlib,elixir,logger]},
+              {description,"genserver_architecture"},
+              {modules,['Elixir.Battery','Elixir.BatteryRegistry',
+                        'Elixir.EnergyApplication',
+                        'Elixir.VirtualPowerPlant']},
+              {registered,[]},
+              {vsn,"0.0.1"},
+              {mod,{'Elixir.EnergyApplication',[]}}]}.

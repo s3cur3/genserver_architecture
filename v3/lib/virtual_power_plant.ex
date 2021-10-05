@@ -68,7 +68,7 @@ defmodule VirtualPowerPlant do
   def handle_call(:total_power, _from, battery_collection) do
     total_power =
       battery_collection
-      |> Enum.map(&Map.fetch!(&1, :current_power_watts))
+      |> Enum.map(& &1.current_power_watts)
       |> Enum.sum()
 
     {:reply, total_power, battery_collection}

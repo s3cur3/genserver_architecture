@@ -1,10 +1,5 @@
 defmodule VirtualPowerPlantTest do
-  use ExUnit.Case
-
-  setup do
-    # Haaaaack!
-    :sys.replace_state(VirtualPowerPlant, fn _ -> [] end)
-  end
+  use ExUnit.Case, async: true
 
   test "aggregates batteries" do
     {:ok, _pid1} = Battery.create("battery_1", 100)

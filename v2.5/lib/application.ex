@@ -5,7 +5,6 @@ defmodule EnergyApplication do
   @impl Application
   def start(_type, _args) do
     children = [
-      BatteryRegistry,
       VirtualPowerPlant
     ]
 

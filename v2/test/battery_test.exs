@@ -1,7 +1,7 @@
 defmodule BatteryTest do
   use ExUnit.Case
 
-  test "create/5 registers a battery for later lookup" do
+  test "creates & registers a battery for later lookup" do
     {:ok, pid} = Battery.create("battery_1", 1_000, 100)
     assert is_pid(pid)
     assert Battery.current_power("battery_1") == 100

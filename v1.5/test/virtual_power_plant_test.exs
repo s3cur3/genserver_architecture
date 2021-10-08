@@ -32,21 +32,4 @@ defmodule VirtualPowerPlantTest do
 
     assert VirtualPowerPlant.current_power() == 11
   end
-
-#  test "adds batteries" do
-#    {:ok, _pid1} = Battery.create("battery_1", 100)
-#    {:ok, _pid2} = Battery.create("battery_2", 100)
-#
-#    Application.put_env(:energy_application, :vpp, :ok)
-#
-#    :global.register_name(:vpp, self())
-#    on_exit(fn -> :global.unregister_name(:vpp) end)
-#
-#    {:ok, task_pid} =
-#      Task.start(fn ->
-#        VirtualPowerPlant.add_battery({:global, :vpp}, "battery_1")
-#      end)
-#
-#    assert_receive {:"$gen_call", {^task_pid, _}, {:add_battery, "battery_1"}}, 500
-#  end
 end

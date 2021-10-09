@@ -14,10 +14,9 @@ defmodule Battery do
 
   @doc """
   Attempts to set our current power to the new value.
-  Returns the actual value set (limited by max power).
   """
   def update_current_power(id, watts) do
-    GenServer.call(via_tuple(id), {:update_power, watts})
+    GenServer.cast(via_tuple(id), {:update_power, watts})
   end
 
   def current_power(id) do
@@ -30,10 +29,10 @@ defmodule Battery do
     {:ok, {id, max_power_watts, starting_power}}
   end
 
-  def handle_call({:update_power, watts}, _from, {id, max_power_watts, _prev_power}) do
+  def handle_cast({:update_power, watts}, {id, max_power_watts, _prev_power}) do
     updated_power = limit_power(watts, max_power_watts)
     updated_state = {id, max_power_watts, updated_power}
-    {:reply, updated_power, updated_state}
+    {:noreply, updated_state}
   end
 
   def handle_call(:current_power, _from, {_id, _max_power, current_power} = state) do

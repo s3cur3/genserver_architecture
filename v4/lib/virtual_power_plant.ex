@@ -13,11 +13,11 @@ defmodule VirtualPowerPlant do
   Associates this battery with our virtual power plant, allowing us to
   control it to meet grid needs.
   """
-  def add_battery(%__MODULE__{} = vpp, battery) do
+  def add_battery(%__MODULE__{} = vpp, %Battery{} = battery) do
     %{vpp | batteries: [battery | vpp.batteries]}
   end
 
-  @doc "Collection of IDs for the batteries we control"
+  @doc "The collection of battery structs we control"
   def batteries(%__MODULE__{} = vpp) do
     vpp.batteries
   end

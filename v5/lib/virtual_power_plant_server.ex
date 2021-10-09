@@ -13,10 +13,10 @@ defmodule VirtualPowerPlant.Server do
   Associates this battery with our virtual power plant, allowing us to
   control it to meet grid needs.
   """
-  def add_battery(server \\ __MODULE__, battery),
+  def add_battery(server \\ __MODULE__, %Battery{} = battery),
       do: GenServer.call(server, {&VirtualPowerPlant.add_battery/2, [battery]})
 
-  @doc "Collection of IDs for the batteries we control"
+  @doc "The collection of battery structs we control"
   def batteries(server \\ __MODULE__),
       do: GenServer.call(server, {&VirtualPowerPlant.batteries/1, []})
 

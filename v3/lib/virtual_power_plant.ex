@@ -18,11 +18,11 @@ defmodule VirtualPowerPlant do
   Associates this battery with our virtual power plant, allowing us to
   control it to meet grid needs.
   """
-  def add_battery(server \\ __MODULE__, %Battery{} = battery) do
+  def add_battery(server \\ __MODULE__, battery) do
     GenServer.call(server, {:add_battery, battery})
   end
 
-  @doc "The collection of battery structs we control"
+  @doc "Collection of IDs for the batteries we control"
   def batteries(server \\ __MODULE__) do
     GenServer.call(server, :batteries)
   end
@@ -68,20 +68,19 @@ defmodule VirtualPowerPlant do
   def handle_call(:total_power, _from, battery_collection) do
     total_power =
       battery_collection
-      |> Enum.map(& &1.current_power_watts)
+      |> Enum.map(&Battery.current_power/1)
       |> Enum.sum()
 
     {:reply, total_power, battery_collection}
   end
 
   def handle_call({:set_power, needed_watts}, _from, battery_collection) do
-    {updated_batteries, _unmet_need} =
-      Enum.reduce(battery_collection, {[], needed_watts}, fn battery, {updated_batteries, need} ->
-        updated_battery = Battery.update_current_power(battery, need)
-        updated_need = need - updated_battery.current_power_watts
-        {[updated_battery | updated_batteries], updated_need}
+    _unmet_need =
+      Enum.reduce(battery_collection, needed_watts, fn battery, remaining_need ->
+        actual_setpoint = Battery.update_current_power(battery, remaining_need)
+        needed_watts - actual_setpoint
       end)
 
-    {:reply, :ok, updated_batteries}
+    {:reply, :ok, battery_collection}
   end
 end

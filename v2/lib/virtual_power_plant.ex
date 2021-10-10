@@ -18,8 +18,8 @@ defmodule VirtualPowerPlant do
   Associates this battery with our virtual power plant, allowing us to
   control it to meet grid needs.
   """
-  def add_battery(server \\ __MODULE__, battery) do
-    GenServer.call(server, {:add_battery, battery})
+  def add_battery(server \\ __MODULE__, battery_id) do
+    GenServer.cast(server, {:add_battery, battery_id})
   end
 
   @doc "Collection of IDs for the batteries we control"
@@ -40,7 +40,7 @@ defmodule VirtualPowerPlant do
   Overrides any previous requests.
   """
   def export(server \\ __MODULE__, watts) do
-    GenServer.call(server, {:set_power, watts})
+    GenServer.cast(server, {:set_power, watts})
   end
 
   @doc """
@@ -48,17 +48,12 @@ defmodule VirtualPowerPlant do
   Overrides any previous requests.
   """
   def absorb(server \\ __MODULE__, watts) do
-    GenServer.call(server, {:set_power, -watts})
+    GenServer.cast(server, {:set_power, -watts})
   end
 
   # Server implementation
   def init(_) do
     {:ok, []}
-  end
-
-  def handle_call({:add_battery, battery}, _from, battery_collection) do
-    updated_state = [battery | battery_collection]
-    {:reply, :ok, updated_state}
   end
 
   def handle_call(:batteries, _from, battery_collection) do
@@ -74,13 +69,25 @@ defmodule VirtualPowerPlant do
     {:reply, total_power, battery_collection}
   end
 
-  def handle_call({:set_power, needed_watts}, _from, battery_collection) do
+  def handle_cast({:add_battery, battery_id}, battery_collection) do
+    updated_state = [battery_id | battery_collection]
+    {:noreply, updated_state}
+  end
+
+  def handle_cast({:set_power, needed_watts}, battery_collection) do
     _unmet_need =
       Enum.reduce(battery_collection, needed_watts, fn battery, remaining_need ->
-        actual_setpoint = Battery.update_current_power(battery, remaining_need)
-        needed_watts - actual_setpoint
+        requested_watts =
+          if remaining_need >= 0 do
+            min(Battery.max_power(battery), remaining_need)
+          else
+            max(-Battery.max_power(battery), remaining_need)
+          end
+
+        Battery.update_current_power(battery, requested_watts)
+        needed_watts - requested_watts
       end)
 
-    {:reply, :ok, battery_collection}
+    {:noreply, battery_collection}
   end
 end

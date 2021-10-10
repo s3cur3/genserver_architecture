@@ -5,7 +5,7 @@ defmodule EnergyApplication do
   @impl Application
   def start(_type, _args) do
     children = [
-      VirtualPowerPlant.Server
+      VirtualPowerPlant
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: EnergySupervisor)

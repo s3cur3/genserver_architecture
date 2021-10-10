@@ -5,7 +5,6 @@ defmodule EnergyApplication do
   @impl Application
   def start(_type, _args) do
     children = [
-      # TODO: Add supervision trees, registry, etc. here
       BatteryRegistry,
       VirtualPowerPlant
     ]

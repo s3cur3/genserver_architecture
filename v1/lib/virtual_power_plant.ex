@@ -17,8 +17,8 @@ defmodule VirtualPowerPlant do
   Associates this battery with our virtual power plant, allowing us to
   control it to meet grid needs.
   """
-  def add_battery(battery) do
-    GenServer.cast(__MODULE__, {:add_battery, battery})
+  def add_battery(battery_id) do
+    GenServer.cast(__MODULE__, {:add_battery, battery_id})
   end
 
   @doc "Collection of IDs for the batteries we control"
@@ -68,8 +68,8 @@ defmodule VirtualPowerPlant do
     {:reply, total_power, battery_collection}
   end
 
-  def handle_cast({:add_battery, battery}, battery_collection) do
-    updated_state = [battery | battery_collection]
+  def handle_cast({:add_battery, battery_id}, battery_collection) do
+    updated_state = [battery_id | battery_collection]
     {:noreply, updated_state}
   end
 
@@ -89,5 +89,4 @@ defmodule VirtualPowerPlant do
 
     {:noreply, battery_collection}
   end
-
 end

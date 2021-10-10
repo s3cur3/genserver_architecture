@@ -74,15 +74,17 @@ defmodule VirtualPowerPlantTest do
   end
 
   #defp sum_of_power(battery_ids) do
-  #  for _ <- 1..2 do
-  #    :sys.get_state(VirtualPowerPlant)
-  #
+  #  sync_batteries = fn ->
   #    battery_ids
   #    |> Enum.map(fn id ->
   #      BatteryRegistry.whereis_name({Battery, id})
   #    end)
   #    |> Enum.each(&:sys.get_state/1)
   #  end
+  #
+  #  sync_batteries.()
+  #  :sys.get_state(VirtualPowerPlant)
+  #  sync_batteries.()
   #
   #  battery_ids
   #  |> Enum.map(&Battery.current_power/1)

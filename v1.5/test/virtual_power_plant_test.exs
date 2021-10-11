@@ -38,35 +38,9 @@ defmodule VirtualPowerPlantTest do
     assert VirtualPowerPlant.current_power() == -5
   end
 
-  test "export and absorb respect max power", %{battery_ids: batteries, max_power: max_power} do
-    VirtualPowerPlant.absorb(max_power * 10)
-    assert sum_of_power(batteries) == -max_power
-
-    VirtualPowerPlant.export(max_power * 10)
-    assert sum_of_power(batteries) == max_power
-  end
-
   defp sum_of_power(battery_ids) do
     battery_ids
     |> Enum.map(&Battery.current_power/1)
     |> Enum.sum()
   end
-
-  #defp sum_of_power(battery_ids) do
-  #  sync_batteries = fn ->
-  #    battery_ids
-  #    |> Enum.map(fn id ->
-  #      BatteryRegistry.whereis_name({Battery, id})
-  #    end)
-  #    |> Enum.each(&:sys.get_state/1)
-  #  end
-  #
-  #  sync_batteries.()
-  #  :sys.get_state(VirtualPowerPlant)
-  #  sync_batteries.()
-  #
-  #  battery_ids
-  #  |> Enum.map(&Battery.current_power/1)
-  #  |> Enum.sum()
-  #end
 end

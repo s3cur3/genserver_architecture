@@ -4,7 +4,14 @@ defmodule VirtualPowerPlantTest do
   setup do
     Application.put_env(:energy_application, :vpp_name, random_atom())
     VirtualPowerPlant.start_link([])
-    :ok
+
+    {:ok, _pid1} = Battery.create("battery_1", 100, 80)
+    {:ok, _pid2} = Battery.create("battery_2", 50, 30)
+
+    VirtualPowerPlant.add_battery("battery_1")
+    VirtualPowerPlant.add_battery("battery_2")
+
+    %{battery_ids: ["battery_1", "battery_2"], max_power: 150}
   end
 
   defp random_atom do
@@ -12,59 +19,31 @@ defmodule VirtualPowerPlantTest do
     String.to_atom(random_string)
   end
 
-  test "aggregates batteries" do
-    {:ok, _pid1} = Battery.create("battery_1", 100)
-    {:ok, _pid2} = Battery.create("battery_2", 100)
-
-    VirtualPowerPlant.add_battery("battery_1")
-    VirtualPowerPlant.add_battery("battery_2")
-
+  test "aggregates batteries", %{battery_ids: battery_ids} do
     batteries = VirtualPowerPlant.batteries()
-    assert Enum.sort(batteries) == ["battery_1", "battery_2"]
+    assert Enum.sort(batteries) == battery_ids
   end
 
-  test "current_power returns the sum of all asset's current_power" do
-    {:ok, _pid1} = Battery.create("battery_1", 100, 8)
-    {:ok, _pid2} = Battery.create("battery_2", 100, 3)
-
-    VirtualPowerPlant.add_battery("battery_1")
-    VirtualPowerPlant.add_battery("battery_2")
-
-    assert VirtualPowerPlant.current_power() == 11
+  test "current_power returns the sum of all asset's current_power", %{battery_ids: batteries} do
+    assert VirtualPowerPlant.current_power() == sum_of_power(batteries)
   end
 
   test "exports power to the grid to meet a demand" do
-    {:ok, _pid1} = Battery.create("battery_1", 100)
-
-    VirtualPowerPlant.add_battery("battery_1")
-
     VirtualPowerPlant.export(5)
-
     assert VirtualPowerPlant.current_power() == 5
   end
 
   test "absorbs power to the grid to meet a demand" do
-    {:ok, _pid1} = Battery.create("battery_1", 100)
-
-    VirtualPowerPlant.add_battery("battery_1")
-
     VirtualPowerPlant.absorb(5)
-
     assert VirtualPowerPlant.current_power() == -5
   end
 
-  test "export and absorb respect max power" do
-    {:ok, _pid1} = Battery.create("battery_1", 100)
-    {:ok, _pid2} = Battery.create("battery_2", 50)
+  test "export and absorb respect max power", %{battery_ids: batteries, max_power: max_power} do
+    VirtualPowerPlant.absorb(max_power * 10)
+    assert sum_of_power(batteries) == -max_power
 
-    VirtualPowerPlant.add_battery("battery_1")
-    VirtualPowerPlant.add_battery("battery_2")
-
-    VirtualPowerPlant.absorb(1_000)
-    assert sum_of_power(["battery_1", "battery_2"]) == -150
-
-    VirtualPowerPlant.export(1_000)
-    assert sum_of_power(["battery_1", "battery_2"]) == 150
+    VirtualPowerPlant.export(max_power * 10)
+    assert sum_of_power(batteries) == max_power
   end
 
   defp sum_of_power(battery_ids) do

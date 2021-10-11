@@ -1,28 +1,38 @@
 defmodule VirtualPowerPlant.ServerTest do
   use ExUnit.Case, async: true
 
-  test "smoke test: aggregates, exports, absorbs" do
-    battery_1 = Battery.new(id: "battery_1", max_power_watts: 75)
-    battery_2 = Battery.new(id: "battery_2", max_power_watts: 50)
 
-    {:ok, vpp} = VirtualPowerPlant.Server.start_link(name: :test1)
-    VirtualPowerPlant.Server.add_battery(vpp, battery_1)
-    VirtualPowerPlant.Server.add_battery(vpp, battery_2)
+  describe "smoke test" do
+    setup do
+      total_max_power = 1_000
+      battery_count = 20
+      per_battery_power = total_max_power / battery_count
 
-    VirtualPowerPlant.Server.absorb(vpp, 1_000)
-    assert VirtualPowerPlant.Server.current_power(vpp) == -125
+      batteries =
+        for battery_idx <- 1..battery_count do
+          Battery.new(id: "battery_#{battery_idx}", max_power_watts: per_battery_power, current_power_watts: per_battery_power * :rand.uniform())
+        end
 
-    VirtualPowerPlant.Server.export(vpp, 1_000)
-    assert VirtualPowerPlant.Server.current_power(vpp) == 125
+      {:ok, vpp} = VirtualPowerPlant.Server.start_link(name: :smoke_test)
+      Enum.each(batteries, &VirtualPowerPlant.Server.add_battery(vpp, &1))
 
-    batteries = VirtualPowerPlant.Server.batteries(vpp)
+      %{vpp_pid: vpp, batteries: batteries, max_power: total_max_power}
+    end
 
-    expected_batteries = [
-      %{battery_1 | current_power_watts: 75},
-      %{battery_2 | current_power_watts: 50}
-    ]
+    test "aggregates batteries", %{vpp_pid: vpp_pid, batteries: initial_batteries} do
+      server_batteries = VirtualPowerPlant.Server.batteries(vpp_pid)
+      assert TestUtils.count_changed(server_batteries, initial_batteries) == 0
+    end
 
-    assert MapSet.new(batteries) == MapSet.new(expected_batteries)
+    test "exports power", %{vpp_pid: vpp_pid, max_power: total_max_power} do
+      VirtualPowerPlant.Server.export(vpp_pid, 2 * total_max_power)
+      assert VirtualPowerPlant.Server.current_power(vpp_pid) == total_max_power
+    end
+
+    test "absorbs power", %{vpp_pid: vpp_pid, max_power: total_max_power} do
+      VirtualPowerPlant.Server.absorb(vpp_pid, 2 * total_max_power)
+      assert VirtualPowerPlant.Server.current_power(vpp_pid) == -total_max_power
+    end
   end
 
   test "fetches remote states on a timer" do

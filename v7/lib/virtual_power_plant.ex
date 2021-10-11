@@ -46,4 +46,13 @@ defmodule VirtualPowerPlant do
 
     %{vpp | batteries: updated_batteries}
   end
+
+  @doc """
+  Updates the n least recently updated batteries.
+  """
+  def update_batteries_from_remote(%__MODULE__{batteries: battery_collection} = vpp, batch_size) do
+    {to_update, remainder} = Enum.split(battery_collection, batch_size)
+    updated = Enum.map(to_update, &Battery.fetch_remote_state/1)
+    %{vpp | batteries: remainder ++ updated}
+  end
 end
